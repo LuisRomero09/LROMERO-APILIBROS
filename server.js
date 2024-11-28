@@ -4,6 +4,7 @@ import swaggerJsDoc from 'swagger-jsdoc';
 import dotenv from 'dotenv';
 import mysql from 'mysql2';
 import fs from 'fs'; // Módulo para leer archivos
+import cors from 'cors'; // Importar cors
 
 // Cargar variables de entorno desde el archivo .env
 dotenv.config();
@@ -85,6 +86,9 @@ app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(especificacionSwagger));
 
 // Middleware para parsear los cuerpos de las solicitudes
 app.use(express.json());
+
+// Habilitar CORS para todas las rutas
+app.use(cors()); // Aplica CORS a todas las rutas
 
 // Crear la conexión a la base de datos MySQL
 const connection = mysql.createConnection({
@@ -284,5 +288,5 @@ app.delete('/libro/:id', (req, res) => {
 
 // Levantar el servidor
 app.listen(port, () => {
-  console.log(`Servidor corriendo en http://localhost:8083`);
+  console.log(`Servidor corriendo en http://localhost:${port}`);
 });
