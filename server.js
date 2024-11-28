@@ -4,7 +4,7 @@ import swaggerJsDoc from 'swagger-jsdoc';
 import dotenv from 'dotenv';
 import mysql from 'mysql2';
 import fs from 'fs'; // Módulo para leer archivos
-import cors from 'cors'; // Importar cors
+import cors from 'cors'; // Módulo para habilitar CORS
 
 // Cargar variables de entorno desde el archivo .env
 dotenv.config();
@@ -87,8 +87,13 @@ app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(especificacionSwagger));
 // Middleware para parsear los cuerpos de las solicitudes
 app.use(express.json());
 
-// Habilitar CORS para todas las rutas
-app.use(cors()); // Aplica CORS a todas las rutas
+// Middleware para habilitar CORS para todas las rutas y orígenes
+const corsOptions = {
+  origin: '*', // Permite solicitudes desde cualquier origen
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos permitidos
+  allowedHeaders: ['Content-Type', 'Authorization'], // Encabezados permitidos
+};
+app.use(cors(corsOptions));
 
 // Crear la conexión a la base de datos MySQL
 const connection = mysql.createConnection({
@@ -286,7 +291,7 @@ app.delete('/libro/:id', (req, res) => {
   });
 });
 
-// Levantar el servidor
+// Iniciar el servidor
 app.listen(port, () => {
-  console.log(`Servidor corriendo en http://localhost:${port}`);
+  console.log(`Servidor en ejecución en http://localhost:${port}`);
 });
