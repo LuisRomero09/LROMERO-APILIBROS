@@ -3,18 +3,18 @@ import swaggerUI from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
 import dotenv from 'dotenv';
 import mysql from 'mysql2';
-import fs from 'fs'; // Módulo para leer archivos
-import cors from 'cors'; // Módulo para habilitar CORS
+import fs from 'fs';
+import cors from 'cors';
 
-// Cargar variables de entorno desde el archivo .env
+// Cargar variables de entorno
 dotenv.config();
 
-// Leer el archivo README.md
+// Leer contenido del archivo README.md
 const readmeContent = fs.readFileSync('./README.md', 'utf-8');
 
 // Crear la aplicación Express
 const app = express();
-const port = process.env.PORT || 8083; // Usa el puerto desde el archivo .env
+const port = process.env.PORT || 8083;
 
 // Configuración de Swagger
 const definicionSwagger = {
@@ -22,7 +22,7 @@ const definicionSwagger = {
   info: {
     title: 'API Libros',
     version: '1.0.0',
-    description: readmeContent, // Agregar contenido del README.md
+    description: readmeContent,
     license: {
       name: 'MIT',
       url: 'https://opensource.org/licenses/MIT',
@@ -34,7 +34,7 @@ const definicionSwagger = {
   },
   servers: [
     {
-      url: process.env.HOST_URL || 'http://localhost:8083', // Usa la URL desde las variables de entorno
+      url: process.env.HOST_URL || `http://localhost:${port}`,
       description: 'Servidor local',
     },
   ],
@@ -44,22 +44,10 @@ const definicionSwagger = {
         type: 'object',
         required: ['id', 'titulo', 'autor', 'anio'],
         properties: {
-          id: {
-            type: 'integer',
-            description: 'ID del libro',
-          },
-          titulo: {
-            type: 'string',
-            description: 'Título del libro',
-          },
-          autor: {
-            type: 'string',
-            description: 'Autor del libro',
-          },
-          anio: {
-            type: 'integer',
-            description: 'Año de publicación del libro',
-          },
+          id: { type: 'integer', description: 'ID del libro' },
+          titulo: { type: 'string', description: 'Título del libro' },
+          autor: { type: 'string', description: 'Autor del libro' },
+          anio: { type: 'integer', description: 'Año de publicación del libro' },
         },
       },
     },
@@ -94,9 +82,7 @@ const definicionSwagger = {
           },
         },
         responses: {
-          201: {
-            description: 'Libro creado',
-          },
+          201: { description: 'Libro creado' },
         },
       },
       put: {
@@ -110,18 +96,14 @@ const definicionSwagger = {
           },
         },
         responses: {
-          200: {
-            description: 'Libro actualizado',
-          },
+          200: { description: 'Libro actualizado' },
         },
       },
       delete: {
         summary: 'Eliminar un libro',
         tags: ['Libros'],
         responses: {
-          200: {
-            description: 'Libro eliminado',
-          },
+          200: { description: 'Libro eliminado' },
         },
       },
     },
@@ -131,39 +113,31 @@ const definicionSwagger = {
 // Opciones para Swagger-jsdoc
 const opcionesSwaggerJsdoc = {
   definition: definicionSwagger,
-  apis: ['./server.js'], // Ruta a este archivo
+  apis: ['./server.js'],
 };
-
-// Generar la especificación Swagger
 const especificacionSwagger = swaggerJsDoc(opcionesSwaggerJsdoc);
 
-// Verificar la especificación Swagger
-console.log(JSON.stringify(especificacionSwagger, null, 2));  // Esto imprime la especificación generada para depuración
-
-// Middleware para habilitar CORS globalmente
+// Middleware para habilitar CORS
 const corsOptions = {
-  origin: '*', // Permite solicitudes desde cualquier origen
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos permitidos
-  allowedHeaders: ['Content-Type', 'Authorization'], // Encabezados permitidos
+  origin: process.env.CORS_ORIGIN || '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 app.use(cors(corsOptions));
 
-// Ruta para visualizar la documentación Swagger en la raíz
-app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(especificacionSwagger));
-
-// Middleware para parsear los cuerpos de las solicitudes
+// Middleware para parsear JSON
 app.use(express.json());
 
-// Crear la conexión a la base de datos MySQL
+// Configuración de base de datos
 const connection = mysql.createConnection({
-  host: process.env.DB_HOST || 'autorack.proxy.rlwy.net',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'gdyeJxAyIROKBOyACzomwnshJbkTsmUH',
-  database: process.env.DB_NAME || 'railway',
-  port: process.env.DB_PORT || 36293,
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
 });
 
-// Conectar a la base de datos
+// Verificar conexión a la base de datos
 connection.connect((err) => {
   if (err) {
     console.error('Error de conexión a la base de datos:', err.stack);
@@ -172,29 +146,19 @@ connection.connect((err) => {
   console.log('Conexión exitosa a la base de datos');
 });
 
-// Ruta GET para la raíz ("/") que redirige a la documentación Swagger
-app.get('/', (req, res) => {
-  res.redirect('/api-docs');  // Redirige a Swagger UI
-});
+// Rutas
+app.get('/', (req, res) => res.redirect('/api-docs'));
 
-// Ruta para obtener todas las tablas
 app.get('/tables', (req, res) => {
   connection.query('SHOW TABLES', (err, results) => {
-    if (err) {
-      console.error('Error al obtener las tablas: ', err);
-      return res.status(500).send('Error al obtener las tablas');
-    }
+    if (err) return res.status(500).send('Error al obtener las tablas');
     res.json(results);
   });
 });
 
-// Rutas de libros con la documentación Swagger
 app.get('/libro', (req, res) => {
   connection.query('SELECT * FROM libros', (err, results) => {
-    if (err) {
-      console.error('Error al obtener los libros: ', err);
-      return res.status(500).send('Error al obtener los libros');
-    }
+    if (err) return res.status(500).send('Error al obtener los libros');
     res.json(results);
   });
 });
@@ -205,16 +169,8 @@ app.post('/libro', (req, res) => {
     'INSERT INTO libros (titulo, autor, anio) VALUES (?, ?, ?)',
     [titulo, autor, anio],
     (err, result) => {
-      if (err) {
-        console.error('Error al agregar el libro: ', err);
-        return res.status(500).send('Error al agregar el libro');
-      }
-      res.status(201).json({
-        id: result.insertId,
-        titulo,
-        autor,
-        anio,
-      });
+      if (err) return res.status(500).send('Error al agregar el libro');
+      res.status(201).json({ id: result.insertId, titulo, autor, anio });
     }
   );
 });
@@ -224,11 +180,8 @@ app.put('/libro', (req, res) => {
   connection.query(
     'UPDATE libros SET titulo = ?, autor = ?, anio = ? WHERE id = ?',
     [titulo, autor, anio, id],
-    (err, result) => {
-      if (err) {
-        console.error('Error al actualizar el libro: ', err);
-        return res.status(500).send('Error al actualizar el libro');
-      }
+    (err) => {
+      if (err) return res.status(500).send('Error al actualizar el libro');
       res.status(200).send('Libro actualizado');
     }
   );
@@ -236,20 +189,14 @@ app.put('/libro', (req, res) => {
 
 app.delete('/libro', (req, res) => {
   const { id } = req.body;
-  connection.query(
-    'DELETE FROM libros WHERE id = ?',
-    [id],
-    (err, result) => {
-      if (err) {
-        console.error('Error al eliminar el libro: ', err);
-        return res.status(500).send('Error al eliminar el libro');
-      }
-      res.status(200).send('Libro eliminado');
-    }
-  );
+  connection.query('DELETE FROM libros WHERE id = ?', [id], (err) => {
+    if (err) return res.status(500).send('Error al eliminar el libro');
+    res.status(200).send('Libro eliminado');
+  });
 });
 
-// Iniciar el servidorx
-app.listen(port, () => {
-  console.log(`Servidor en ejecución en http://localhost:${port}`);
-});
+// Ruta para la documentación de Swagger
+app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(especificacionSwagger));
+
+// Iniciar el servidor
+app.listen(port, () => console.log(`Servidor en ejecución en http://localhost:${port}`));
