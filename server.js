@@ -9,7 +9,7 @@ import cors from 'cors'; // Módulo para habilitar CORS
 // Cargar variables de entorno desde el archivo .env
 dotenv.config();
 
-// Leer el archivo README.md
+// Leeer el archivo README.md
 const readmeContent = fs.readFileSync('./README.md', 'utf-8');
 
 // Crear la aplicación Express
@@ -34,8 +34,8 @@ const definicionSwagger = {
   },
   servers: [
     {
-      url: process.env.HOST_URL || 'http://localhost:8083', // Usa la URL desde las variables de entorno
-      description: 'Servidor local',
+      url: 'https://lromero-apilibros.onrender.com', // Cambia localhost por la URL de Render
+      description: 'Servidor en Render',
     },
   ],
   components: {
@@ -138,7 +138,7 @@ const opcionesSwaggerJsdoc = {
 const especificacionSwagger = swaggerJsDoc(opcionesSwaggerJsdoc);
 
 // Verificar la especificación Swagger
-console.log(JSON.stringify(especificacionSwagger, null, 2));  // Esto imprime la especificación generada para depuración
+console.log(JSON.stringify(especificacionSwagger, null, 2)); // Esto imprime la especificación generada para depuración
 
 // Middleware para habilitar CORS globalmente
 const corsOptions = {
@@ -174,7 +174,7 @@ connection.connect((err) => {
 
 // Ruta GET para la raíz ("/") que redirige a la documentación Swagger
 app.get('/', (req, res) => {
-  res.redirect('/api-docs');  // Redirige a Swagger UI
+  res.redirect('/api-docs'); // Redirige a Swagger UI
 });
 
 // Ruta para obtener todas las tablas
