@@ -13,7 +13,7 @@ const readmeContent = fs.readFileSync('./README.md', 'utf-8');
 
 // Crear la aplicación Express
 const app = express();
-const port = process.env.PORT || 8083; // Usa el puerto desde el archivo .env
+const port = process.env.PORT || 8080; // Usa el puerto desde el archivo .env
 
 // Configuración de Swagger
 const definicionSwagger = {
@@ -33,7 +33,7 @@ const definicionSwagger = {
   },
   servers: [
     {
-      url: process.env.HOST_URL || 'http://localhost:8083', // Usa la URL desde las variables de entorno
+      url: process.env.HOST_URL || 'http://localhost:8080', // Usa la URL desde las variables de entorno
       description: 'Servidor local',
     },
   ],
@@ -121,23 +121,6 @@ app.get('/tables', (req, res) => {
 });
 
 // Ruta GET para obtener todos los libros
-/**
- * @swagger
- * /libro:
- *   get:
- *     summary: Obtiene todos los libros
- *     tags:
- *       - Libros
- *     responses:
- *       200:
- *         description: Lista de libros
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Libro'
- */
 app.get('/libro', (req, res) => {
   connection.query('SELECT * FROM libros', (err, results) => {
     if (err) {
@@ -149,27 +132,6 @@ app.get('/libro', (req, res) => {
 });
 
 // Ruta POST para crear un nuevo libro
-/**
- * @swagger
- * /libro:
- *   post:
- *     summary: Crea un nuevo libro
- *     tags:
- *       - Libros
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Libro'
- *     responses:
- *       201:
- *         description: Libro creado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Libro'
- */
 app.post('/libro', (req, res) => {
   const { titulo, autor, anio } = req.body;
   connection.query(
@@ -191,34 +153,6 @@ app.post('/libro', (req, res) => {
 });
 
 // Ruta PUT para actualizar un libro
-/**
- * @swagger
- * /libro/{id}:
- *   put:
- *     summary: Actualiza un libro
- *     tags:
- *       - Libros
- *     parameters:
- *       - name: id
- *         in: path
- *         description: ID del libro a actualizar
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Libro'
- *     responses:
- *       200:
- *         description: Libro actualizado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Libro'
- */
 app.put('/libro/:id', (req, res) => {
   const libroId = parseInt(req.params.id, 10);
   const { titulo, autor, anio } = req.body;
@@ -245,26 +179,6 @@ app.put('/libro/:id', (req, res) => {
 });
 
 // Ruta DELETE para eliminar un libro
-/**
- * @swagger
- * /libro/{id}:
- *   delete:
- *     summary: Elimina un libro
- *     tags:
- *       - Libros
- *     parameters:
- *       - name: id
- *         in: path
- *         description: ID del libro a eliminar
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Libro eliminado
- *       404:
- *         description: Libro no encontrado
- */
 app.delete('/libro/:id', (req, res) => {
   const libroId = parseInt(req.params.id, 10);
 
@@ -284,5 +198,5 @@ app.delete('/libro/:id', (req, res) => {
 
 // Levantar el servidor
 app.listen(port, () => {
-  console.log(`Servidor corriendo en http://localhost:8083`);
+  console.log(`Servidor corriendo en http://localhost:${port}`);
 });
