@@ -64,12 +64,68 @@ const definicionSwagger = {
       },
     },
   },
-  tags: [
-    {
-      name: 'Libros',
-      description: 'Operaciones relacionadas con los libros',
+  paths: {
+    '/libro': {
+      get: {
+        summary: 'Obtener todos los libros',
+        tags: ['Libros'],
+        responses: {
+          200: {
+            description: 'Lista de libros',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/Libro' },
+                },
+              },
+            },
+          },
+        },
+      },
+      post: {
+        summary: 'Crear un nuevo libro',
+        tags: ['Libros'],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/Libro' },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: 'Libro creado',
+          },
+        },
+      },
+      put: {
+        summary: 'Actualizar un libro',
+        tags: ['Libros'],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/Libro' },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Libro actualizado',
+          },
+        },
+      },
+      delete: {
+        summary: 'Eliminar un libro',
+        tags: ['Libros'],
+        responses: {
+          200: {
+            description: 'Libro eliminado',
+          },
+        },
+      },
     },
-  ],
+  },
 };
 
 // Opciones para Swagger-jsdoc
@@ -81,19 +137,22 @@ const opcionesSwaggerJsdoc = {
 // Generar la especificación Swagger
 const especificacionSwagger = swaggerJsDoc(opcionesSwaggerJsdoc);
 
-// Ruta para visualizar la documentación Swagger en la raíz
-app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(especificacionSwagger));
+// Verificar la especificación Swagger
+console.log(JSON.stringify(especificacionSwagger, null, 2));  // Esto imprime la especificación generada para depuración
 
-// Middleware para parsear los cuerpos de las solicitudes
-app.use(express.json());
-
-// Middleware para habilitar CORS para todas las rutas y orígenes
+// Middleware para habilitar CORS globalmente
 const corsOptions = {
   origin: '*', // Permite solicitudes desde cualquier origen
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos permitidos
   allowedHeaders: ['Content-Type', 'Authorization'], // Encabezados permitidos
 };
 app.use(cors(corsOptions));
+
+// Ruta para visualizar la documentación Swagger en la raíz
+app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(especificacionSwagger));
+
+// Middleware para parsear los cuerpos de las solicitudes
+app.use(express.json());
 
 // Crear la conexión a la base de datos MySQL
 const connection = mysql.createConnection({
@@ -129,24 +188,7 @@ app.get('/tables', (req, res) => {
   });
 });
 
-// Ruta GET para obtener todos los libros
-/**
- * @swagger
- * /libro:
- *   get:
- *     summary: Obtiene todos los libros
- *     tags:
- *       - Libros
- *     responses:
- *       200:
- *         description: Lista de libros
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Libro'
- */
+// Rutas de libros con la documentación Swagger
 app.get('/libro', (req, res) => {
   connection.query('SELECT * FROM libros', (err, results) => {
     if (err) {
@@ -157,28 +199,6 @@ app.get('/libro', (req, res) => {
   });
 });
 
-// Ruta POST para crear un nuevo libro
-/**
- * @swagger
- * /libro:
- *   post:
- *     summary: Crea un nuevo libro
- *     tags:
- *       - Libros
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Libro'
- *     responses:
- *       201:
- *         description: Libro creado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Libro'
- */
 app.post('/libro', (req, res) => {
   const { titulo, autor, anio } = req.body;
   connection.query(
@@ -199,96 +219,34 @@ app.post('/libro', (req, res) => {
   );
 });
 
-// Ruta PUT para actualizar un libro
-/**
- * @swagger
- * /libro/{id}:
- *   put:
- *     summary: Actualiza un libro
- *     tags:
- *       - Libros
- *     parameters:
- *       - name: id
- *         in: path
- *         description: ID del libro a actualizar
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Libro'
- *     responses:
- *       200:
- *         description: Libro actualizado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Libro'
- */
-app.put('/libro/:id', (req, res) => {
-  const libroId = parseInt(req.params.id, 10);
-  const { titulo, autor, anio } = req.body;
-
+app.put('/libro', (req, res) => {
+  const { id, titulo, autor, anio } = req.body;
   connection.query(
     'UPDATE libros SET titulo = ?, autor = ?, anio = ? WHERE id = ?',
-    [titulo, autor, anio, libroId],
+    [titulo, autor, anio, id],
     (err, result) => {
       if (err) {
         console.error('Error al actualizar el libro: ', err);
         return res.status(500).send('Error al actualizar el libro');
       }
-      if (result.affectedRows === 0) {
-        return res.status(404).send('Libro no encontrado');
-      }
-      res.json({
-        id: libroId,
-        titulo,
-        autor,
-        anio,
-      });
+      res.status(200).send('Libro actualizado');
     }
   );
 });
 
-// Ruta DELETE para eliminar un libro
-/**
- * @swagger
- * /libro/{id}:
- *   delete:
- *     summary: Elimina un libro
- *     tags:
- *       - Libros
- *     parameters:
- *       - name: id
- *         in: path
- *         description: ID del libro a eliminar
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Libro eliminado
- *       404:
- *         description: Libro no encontrado
- */
-app.delete('/libro/:id', (req, res) => {
-  const libroId = parseInt(req.params.id, 10);
-
-  connection.query('DELETE FROM libros WHERE id = ?', [libroId], (err, result) => {
-    if (err) {
-      console.error('Error al eliminar el libro: ', err);
-      return res.status(500).send('Error al eliminar el libro');
+app.delete('/libro', (req, res) => {
+  const { id } = req.body;
+  connection.query(
+    'DELETE FROM libros WHERE id = ?',
+    [id],
+    (err, result) => {
+      if (err) {
+        console.error('Error al eliminar el libro: ', err);
+        return res.status(500).send('Error al eliminar el libro');
+      }
+      res.status(200).send('Libro eliminado');
     }
-    if (result.affectedRows === 0) {
-      return res.status(404).send('Libro no encontrado');
-    }
-    res.json({
-      message: `Libro con ID ${libroId} eliminado`,
-    });
-  });
+  );
 });
 
 // Iniciar el servidor
