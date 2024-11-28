@@ -14,7 +14,7 @@ const readmeContent = fs.readFileSync('./README.md', 'utf-8');
 
 // Crear la aplicación Express
 const app = express();
-const port = process.env.PORT || 8083; // Usa el puerto desde las variables de entorno
+const port = process.env.PORT || 8083; // Usa el puerto desde el archivo .env
 
 // Configuración de Swagger
 const definicionSwagger = {
