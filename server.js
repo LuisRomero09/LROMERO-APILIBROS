@@ -3,8 +3,8 @@ import swaggerUI from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
 import dotenv from 'dotenv';
 import mysql from 'mysql2';
-import fs from 'fs';
-import cors from 'cors';
+import fs from 'fs'; // Módulo para leer archivos
+import cors from 'cors'; // Módulo para habilitar CORS
 
 // Cargar variables de entorno desde el archivo .env
 dotenv.config();
@@ -12,11 +12,11 @@ dotenv.config();
 // Leer el archivo README.md
 const readmeContent = fs.existsSync('./README.md')
   ? fs.readFileSync('./README.md', 'utf-8')
-  : 'API para gestionar libros';
+  : 'Documentación de la API';
 
 // Crear la aplicación Express
 const app = express();
-const port = process.env.PORT || 8083;
+const port = process.env.PORT || 8083; // Usa el puerto desde el archivo .env
 
 // Configuración de Swagger
 const definicionSwagger = {
@@ -24,7 +24,7 @@ const definicionSwagger = {
   info: {
     title: 'API Libros',
     version: '1.0.0',
-    description: readmeContent,
+    description: readmeContent, // Agregar contenido del README.md
     license: {
       name: 'MIT',
       url: 'https://opensource.org/licenses/MIT',
@@ -36,7 +36,7 @@ const definicionSwagger = {
   },
   servers: [
     {
-      url: process.env.HOST_URL || `http://localhost:${port}`,
+      url: process.env.HOST_URL || `http://localhost:${port}`, // Usa la URL desde las variables de entorno
       description: 'Servidor local',
     },
   ],
@@ -49,7 +49,7 @@ const definicionSwagger = {
           id: { type: 'integer', description: 'ID del libro' },
           titulo: { type: 'string', description: 'Título del libro' },
           autor: { type: 'string', description: 'Autor del libro' },
-          anio: { type: 'integer', description: 'Año de publicación' },
+          anio: { type: 'integer', description: 'Año de publicación del libro' },
         },
       },
     },
@@ -87,50 +87,83 @@ const definicionSwagger = {
           201: { description: 'Libro creado' },
         },
       },
+      put: {
+        summary: 'Actualizar un libro',
+        tags: ['Libros'],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/Libro' },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Libro actualizado' },
+        },
+      },
+      delete: {
+        summary: 'Eliminar un libro',
+        tags: ['Libros'],
+        responses: {
+          200: { description: 'Libro eliminado' },
+        },
+      },
     },
   },
 };
 
+// Opciones para Swagger-jsdoc
 const opcionesSwaggerJsdoc = {
   definition: definicionSwagger,
-  apis: ['./server.js'],
+  apis: ['./server.js'], // Ruta a este archivo
 };
+
+// Generar la especificación Swagger
 const especificacionSwagger = swaggerJsDoc(opcionesSwaggerJsdoc);
 
-// Middleware
-app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE'] }));
-app.use(express.json());
+// Middleware para habilitar CORS globalmente
+const corsOptions = {
+  origin: '*', // Permite solicitudes desde cualquier origen
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos permitidos
+  allowedHeaders: ['Content-Type', 'Authorization'], // Encabezados permitidos
+};
+app.use(cors(corsOptions));
+
+// Ruta para visualizar la documentación Swagger
 app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(especificacionSwagger));
 
-// Ruta raíz
-app.get('/', (req, res) => {
-  res.redirect('/api-docs');
-});
+// Middleware para parsear los cuerpos de las solicitudes
+app.use(express.json());
 
-// Conexión a la base de datos
+// Crear la conexión a la base de datos MySQL
 const connection = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
+  host: process.env.DB_HOST || 'autorack.proxy.rlwy.net',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || 'gdyeJxAyIROKBOyACzomwnshJbkTsmUH',
+  database: process.env.DB_NAME || 'railway',
+  port: process.env.DB_PORT || 36293,
 });
 
+// Conectar a la base de datos
 connection.connect((err) => {
   if (err) {
-    console.error('Error de conexión a la base de datos:', err.message);
-    console.error('Detalles:', err);
-    process.exit(1); // Salir si no se puede conectar
+    console.error('Error de conexión a la base de datos:', err.stack);
+    return;
   }
   console.log('Conexión exitosa a la base de datos');
 });
 
-// Endpoints
+// Ruta GET para la raíz ("/") que redirige a la documentación Swagger
+app.get('/', (req, res) => {
+  res.redirect('/api-docs');
+});
+
+// Rutas de libros
 app.get('/libro', (req, res) => {
   connection.query('SELECT * FROM libros', (err, results) => {
     if (err) {
-      console.error('Error al obtener los libros:', err.message);
-      return res.status(500).json({ error: 'Error al obtener los libros' });
+      console.error('Error al obtener los libros:', err);
+      return res.status(500).send('Error al obtener los libros');
     }
     res.json(results);
   });
@@ -138,16 +171,13 @@ app.get('/libro', (req, res) => {
 
 app.post('/libro', (req, res) => {
   const { titulo, autor, anio } = req.body;
-  if (!titulo || !autor || !anio) {
-    return res.status(400).json({ error: 'Faltan datos requeridos' });
-  }
   connection.query(
     'INSERT INTO libros (titulo, autor, anio) VALUES (?, ?, ?)',
     [titulo, autor, anio],
     (err, result) => {
       if (err) {
-        console.error('Error al agregar el libro:', err.message);
-        return res.status(500).json({ error: 'Error al agregar el libro' });
+        console.error('Error al agregar el libro:', err);
+        return res.status(500).send('Error al agregar el libro');
       }
       res.status(201).json({
         id: result.insertId,
@@ -155,6 +185,36 @@ app.post('/libro', (req, res) => {
         autor,
         anio,
       });
+    }
+  );
+});
+
+app.put('/libro', (req, res) => {
+  const { id, titulo, autor, anio } = req.body;
+  connection.query(
+    'UPDATE libros SET titulo = ?, autor = ?, anio = ? WHERE id = ?',
+    [titulo, autor, anio, id],
+    (err, result) => {
+      if (err) {
+        console.error('Error al actualizar el libro:', err);
+        return res.status(500).send('Error al actualizar el libro');
+      }
+      res.status(200).send('Libro actualizado');
+    }
+  );
+});
+
+app.delete('/libro', (req, res) => {
+  const { id } = req.body;
+  connection.query(
+    'DELETE FROM libros WHERE id = ?',
+    [id],
+    (err, result) => {
+      if (err) {
+        console.error('Error al eliminar el libro:', err);
+        return res.status(500).send('Error al eliminar el libro');
+      }
+      res.status(200).send('Libro eliminado');
     }
   );
 });
