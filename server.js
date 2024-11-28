@@ -81,9 +81,6 @@ const opcionesSwaggerJsdoc = {
 // Generar la especificación Swagger
 const especificacionSwagger = swaggerJsDoc(opcionesSwaggerJsdoc);
 
-// Verificar la especificación Swagger
-console.log(JSON.stringify(especificacionSwagger, null, 2));  // Esto imprime la especificación generada para depuración
-
 // Ruta para visualizar la documentación Swagger en la raíz
 app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(especificacionSwagger));
 
