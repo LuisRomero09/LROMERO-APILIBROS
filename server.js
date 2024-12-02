@@ -9,14 +9,14 @@ import cors from 'cors'; // Módulo para habilitar CORS
 // Cargar variables de entorno desde el archivo .env
 dotenv.config();
 
-// Leeer el archivo README.md
+// Leer el archivo README.md
 const readmeContent = fs.readFileSync('./README.md', 'utf-8');
 
 // Crear la aplicación Express
 const app = express();
 const port = process.env.PORT || 8083; // Usa el puerto desde el archivo .env
 
-// Configuración de Swagger
+// Configuración de Swaggers
 const definicionSwagger = {
   openapi: '3.0.0',
   info: {
@@ -125,6 +125,36 @@ const definicionSwagger = {
         },
       },
     },
+    '/libro/{id}': {
+      get: {
+        summary: 'Obtener un libro por ID',
+        tags: ['Libros'],
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            description: 'ID del libro',
+            schema: {
+              type: 'integer',
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'Libro encontrado',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Libro' },
+              },
+            },
+          },
+          404: {
+            description: 'Libro no encontrado',
+          },
+        },
+      },
+    },
   },
 };
 
@@ -197,6 +227,25 @@ app.get('/libro', (req, res) => {
     }
     res.json(results);
   });
+});
+
+// Nueva ruta para obtener un libro por ID
+app.get('/libro/:id', (req, res) => {
+  const { id } = req.params;
+  connection.query(
+    'SELECT * FROM libros WHERE id = ?',
+    [id],
+    (err, results) => {
+      if (err) {
+        console.error('Error al obtener el libro: ', err);
+        return res.status(500).send('Error al obtener el libro');
+      }
+      if (results.length === 0) {
+        return res.status(404).send('Libro no encontrado');
+      }
+      res.json(results[0]);
+    }
+  );
 });
 
 app.post('/libro', (req, res) => {
