@@ -248,8 +248,15 @@ app.get('/libro/:id', (req, res) => {
   );
 });
 
+// Método POST para agregar un libro
 app.post('/libro', (req, res) => {
   const { titulo, autor, anio } = req.body;
+
+  // Validar si los campos requeridos están presentes
+  if (!titulo || !autor || !anio) {
+    return res.status(400).send('Faltan campos requeridos');
+  }
+
   connection.query(
     'INSERT INTO libros (titulo, autor, anio) VALUES (?, ?, ?)',
     [titulo, autor, anio],
@@ -258,6 +265,7 @@ app.post('/libro', (req, res) => {
         console.error('Error al agregar el libro: ', err);
         return res.status(500).send('Error al agregar el libro');
       }
+      // Respuesta exitosa con el libro creado
       res.status(201).json({
         id: result.insertId,
         titulo,
@@ -268,6 +276,7 @@ app.post('/libro', (req, res) => {
   );
 });
 
+// Método PUT para actualizar un libro
 app.put('/libro', (req, res) => {
   const { id, titulo, autor, anio } = req.body;
   connection.query(
@@ -283,6 +292,7 @@ app.put('/libro', (req, res) => {
   );
 });
 
+// Método DELETE para eliminar un libro
 app.delete('/libro', (req, res) => {
   const { id } = req.body;
   connection.query(
