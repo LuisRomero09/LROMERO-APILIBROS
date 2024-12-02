@@ -9,7 +9,7 @@ import cors from 'cors'; // Módulo para habilitar CORS
 // Cargar variables de entorno desde el archivo .env
 dotenv.config();
 
-// Leer el archivo README.md
+// Leeer el archivo README.md
 const readmeContent = fs.readFileSync('./README.md', 'utf-8');
 
 // Crear la aplicación Express
@@ -65,7 +65,7 @@ const definicionSwagger = {
     },
   },
   paths: {
-    '/libros': {
+    '/libro': {
       get: {
         summary: 'Obtener todos los libros',
         tags: ['Libros'],
@@ -99,22 +99,9 @@ const definicionSwagger = {
           },
         },
       },
-    },
-    '/libro/{id}': {
       put: {
         summary: 'Actualizar un libro',
         tags: ['Libros'],
-        parameters: [
-          {
-            in: 'path',
-            name: 'id',
-            required: true,
-            schema: {
-              type: 'integer',
-            },
-            description: 'ID del libro a actualizar',
-          },
-        ],
         requestBody: {
           content: {
             'application/json': {
@@ -131,17 +118,6 @@ const definicionSwagger = {
       delete: {
         summary: 'Eliminar un libro',
         tags: ['Libros'],
-        parameters: [
-          {
-            in: 'path',
-            name: 'id',
-            required: true,
-            schema: {
-              type: 'integer',
-            },
-            description: 'ID del libro a eliminar',
-          },
-        ],
         responses: {
           200: {
             description: 'Libro eliminado',
@@ -213,20 +189,18 @@ app.get('/tables', (req, res) => {
 });
 
 // Rutas de libros con la documentación Swagger
-app.post('/libros', (req, res) => {
+app.get('/libro', (req, res) => {
+  connection.query('SELECT * FROM libros', (err, results) => {
+    if (err) {
+      console.error('Error al obtener los libros: ', err);
+      return res.status(500).send('Error al obtener los libros');
+    }
+    res.json(results);
+  });
+});
+
+app.post('/libro', (req, res) => {
   const { titulo, autor, anio } = req.body;
-
-  // Validación de los datos de entrada
-  if (!titulo || !autor || !anio) {
-    return res.status(400).send('Faltan datos requeridos (titulo, autor, anio)');
-  }
-
-  // Asegurarnos de que 'anio' sea un número válido
-  if (isNaN(anio)) {
-    return res.status(400).send('El año debe ser un número válido');
-  }
-
-  // Consulta para insertar el libro en la base de datos
   connection.query(
     'INSERT INTO libros (titulo, autor, anio) VALUES (?, ?, ?)',
     [titulo, autor, anio],
@@ -235,8 +209,6 @@ app.post('/libros', (req, res) => {
         console.error('Error al agregar el libro: ', err);
         return res.status(500).send('Error al agregar el libro');
       }
-
-      // Respuesta exitosa con el libro creado
       res.status(201).json({
         id: result.insertId,
         titulo,
@@ -247,20 +219,8 @@ app.post('/libros', (req, res) => {
   );
 });
 
-
-
-
-
-app.put('/libro/:id', (req, res) => {
-  const { id } = req.params;
-  const { titulo, autor, anio } = req.body;
-
-  // Validar datos de entrada
-  if (!titulo || !autor || !anio) {
-    return res.status(400).send('Faltan datos requeridos (titulo, autor, anio)');
-  }
-
-  // Consulta para actualizar el libro
+app.put('/libro', (req, res) => {
+  const { id, titulo, autor, anio } = req.body;
   connection.query(
     'UPDATE libros SET titulo = ?, autor = ?, anio = ? WHERE id = ?',
     [titulo, autor, anio, id],
@@ -269,27 +229,13 @@ app.put('/libro/:id', (req, res) => {
         console.error('Error al actualizar el libro: ', err);
         return res.status(500).send('Error al actualizar el libro');
       }
-
-      // Verificar si se actualizó alguna fila
-      if (result.affectedRows === 0) {
-        return res.status(404).send('No se encontró un libro con el ID proporcionado');
-      }
-
-      res.status(200).send({
-        mensaje: 'Libro actualizado correctamente',
-        id,
-        titulo,
-        autor,
-        anio,
-      });
+      res.status(200).send('Libro actualizado');
     }
   );
 });
 
-
-
-app.delete('/libro/:id', (req, res) => {
-  const { id } = req.params;
+app.delete('/libro', (req, res) => {
+  const { id } = req.body;
   connection.query(
     'DELETE FROM libros WHERE id = ?',
     [id],
@@ -301,11 +247,6 @@ app.delete('/libro/:id', (req, res) => {
       res.status(200).send('Libro eliminado');
     }
   );
-});
-
-// Ruta para servir el archivo swagger.json
-app.get('/swagger.json', (req, res) => {
-  res.json(especificacionSwagger);
 });
 
 // Iniciar el servidor
