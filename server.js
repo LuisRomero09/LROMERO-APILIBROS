@@ -65,7 +65,7 @@ const definicionSwagger = {
     },
   },
   paths: {
-    '/libro': {
+    '/libros': {
       get: {
         summary: 'Obtener todos los libros',
         tags: ['Libros'],
@@ -99,9 +99,22 @@ const definicionSwagger = {
           },
         },
       },
+    },
+    '/libro/{id}': {
       put: {
         summary: 'Actualizar un libro',
         tags: ['Libros'],
+        parameters: [
+          {
+            in: 'path',
+            name: 'id',
+            required: true,
+            schema: {
+              type: 'integer',
+            },
+            description: 'ID del libro a actualizar',
+          },
+        ],
         requestBody: {
           content: {
             'application/json': {
@@ -118,6 +131,17 @@ const definicionSwagger = {
       delete: {
         summary: 'Eliminar un libro',
         tags: ['Libros'],
+        parameters: [
+          {
+            in: 'path',
+            name: 'id',
+            required: true,
+            schema: {
+              type: 'integer',
+            },
+            description: 'ID del libro a eliminar',
+          },
+        ],
         responses: {
           200: {
             description: 'Libro eliminado',
@@ -189,7 +213,7 @@ app.get('/tables', (req, res) => {
 });
 
 // Rutas de libros con la documentación Swagger
-app.get('/libro', (req, res) => {
+app.get('/libros', (req, res) => {
   connection.query('SELECT * FROM libros', (err, results) => {
     if (err) {
       console.error('Error al obtener los libros: ', err);
@@ -199,7 +223,7 @@ app.get('/libro', (req, res) => {
   });
 });
 
-app.post('/libro', (req, res) => {
+app.post('/libros', (req, res) => {
   const { titulo, autor, anio } = req.body;
   connection.query(
     'INSERT INTO libros (titulo, autor, anio) VALUES (?, ?, ?)',
@@ -219,8 +243,9 @@ app.post('/libro', (req, res) => {
   );
 });
 
-app.put('/libro', (req, res) => {
-  const { id, titulo, autor, anio } = req.body;
+app.put('/libro/:id', (req, res) => {
+  const { id } = req.params;
+  const { titulo, autor, anio } = req.body;
   connection.query(
     'UPDATE libros SET titulo = ?, autor = ?, anio = ? WHERE id = ?',
     [titulo, autor, anio, id],
@@ -234,8 +259,8 @@ app.put('/libro', (req, res) => {
   );
 });
 
-app.delete('/libro', (req, res) => {
-  const { id } = req.body;
+app.delete('/libro/:id', (req, res) => {
+  const { id } = req.params;
   connection.query(
     'DELETE FROM libros WHERE id = ?',
     [id],
