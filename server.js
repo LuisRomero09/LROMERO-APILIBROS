@@ -248,24 +248,26 @@ app.get('/libro/:id', (req, res) => {
   );
 });
 
-// Método POST para agregar un libro
+// Método POST corregido
 app.post('/libro', (req, res) => {
   const { titulo, autor, anio } = req.body;
 
-  // Validar si los campos requeridos están presentes
   if (!titulo || !autor || !anio) {
-    return res.status(400).send('Faltan campos requeridos');
+    return res.status(400).send('Faltan campos obligatorios');
+  }
+
+  if (isNaN(anio)) {
+    return res.status(400).send('El año debe ser un número entero');
   }
 
   connection.query(
     'INSERT INTO libros (titulo, autor, anio) VALUES (?, ?, ?)',
-    [titulo, autor, anio],
+    [titulo, autor, parseInt(anio)],
     (err, result) => {
       if (err) {
         console.error('Error al agregar el libro: ', err);
         return res.status(500).send('Error al agregar el libro');
       }
-      // Respuesta exitosa con el libro creado
       res.status(201).json({
         id: result.insertId,
         titulo,
@@ -276,12 +278,17 @@ app.post('/libro', (req, res) => {
   );
 });
 
-// Método PUT para actualizar un libro
+// Método PUT
 app.put('/libro', (req, res) => {
   const { id, titulo, autor, anio } = req.body;
+
+  if (!id || !titulo || !autor || !anio) {
+    return res.status(400).send('Faltan campos obligatorios');
+  }
+
   connection.query(
     'UPDATE libros SET titulo = ?, autor = ?, anio = ? WHERE id = ?',
-    [titulo, autor, anio, id],
+    [titulo, autor, parseInt(anio), id],
     (err, result) => {
       if (err) {
         console.error('Error al actualizar el libro: ', err);
@@ -292,9 +299,13 @@ app.put('/libro', (req, res) => {
   );
 });
 
-// Método DELETE para eliminar un libro
+// Método DELETE
 app.delete('/libro', (req, res) => {
   const { id } = req.body;
+  if (!id) {
+    return res.status(400).send('ID del libro es requerido');
+  }
+
   connection.query(
     'DELETE FROM libros WHERE id = ?',
     [id],
@@ -310,5 +321,5 @@ app.delete('/libro', (req, res) => {
 
 // Iniciar el servidor
 app.listen(port, () => {
-  console.log(`Servidor en ejecución en http://localhost:${port}`);
+  console.log(`Servidor corriendo en el puerto ${port}`);
 });
