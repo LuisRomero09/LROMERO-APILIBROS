@@ -9,7 +9,7 @@ import cors from 'cors'; // Módulo para habilitar CORS
 // Cargar variables de entorno desde el archivo .env
 dotenv.config();
 
-// Leeer el archivo README.md
+// Leer el archivo README.md
 const readmeContent = fs.readFileSync('./README.md', 'utf-8');
 
 // Crear la aplicación Express
