@@ -213,18 +213,20 @@ app.get('/tables', (req, res) => {
 });
 
 // Rutas de libros con la documentación Swagger
-app.get('/libros', (req, res) => {
-  connection.query('SELECT * FROM libros', (err, results) => {
-    if (err) {
-      console.error('Error al obtener los libros: ', err);
-      return res.status(500).send('Error al obtener los libros');
-    }
-    res.json(results);
-  });
-});
-
 app.post('/libros', (req, res) => {
   const { titulo, autor, anio } = req.body;
+
+  // Validación de los datos de entrada
+  if (!titulo || !autor || !anio) {
+    return res.status(400).send('Faltan datos requeridos (titulo, autor, anio)');
+  }
+
+  // Asegurarnos de que 'anio' sea un número válido
+  if (isNaN(anio)) {
+    return res.status(400).send('El año debe ser un número válido');
+  }
+
+  // Consulta para insertar el libro en la base de datos
   connection.query(
     'INSERT INTO libros (titulo, autor, anio) VALUES (?, ?, ?)',
     [titulo, autor, anio],
@@ -233,6 +235,8 @@ app.post('/libros', (req, res) => {
         console.error('Error al agregar el libro: ', err);
         return res.status(500).send('Error al agregar el libro');
       }
+
+      // Respuesta exitosa con el libro creado
       res.status(201).json({
         id: result.insertId,
         titulo,
@@ -243,9 +247,20 @@ app.post('/libros', (req, res) => {
   );
 });
 
+
+
+
+
 app.put('/libro/:id', (req, res) => {
   const { id } = req.params;
   const { titulo, autor, anio } = req.body;
+
+  // Validar datos de entrada
+  if (!titulo || !autor || !anio) {
+    return res.status(400).send('Faltan datos requeridos (titulo, autor, anio)');
+  }
+
+  // Consulta para actualizar el libro
   connection.query(
     'UPDATE libros SET titulo = ?, autor = ?, anio = ? WHERE id = ?',
     [titulo, autor, anio, id],
@@ -254,10 +269,24 @@ app.put('/libro/:id', (req, res) => {
         console.error('Error al actualizar el libro: ', err);
         return res.status(500).send('Error al actualizar el libro');
       }
-      res.status(200).send('Libro actualizado');
+
+      // Verificar si se actualizó alguna fila
+      if (result.affectedRows === 0) {
+        return res.status(404).send('No se encontró un libro con el ID proporcionado');
+      }
+
+      res.status(200).send({
+        mensaje: 'Libro actualizado correctamente',
+        id,
+        titulo,
+        autor,
+        anio,
+      });
     }
   );
 });
+
+
 
 app.delete('/libro/:id', (req, res) => {
   const { id } = req.params;
