@@ -16,7 +16,7 @@ const readmeContent = fs.readFileSync('./README.md', 'utf-8');
 const app = express();
 const port = process.env.PORT || 8083; // Usa el puerto desde el archivo .env
 
-// Configuración de Swagger
+// Configuración de Swaggers
 const definicionSwagger = {
   openapi: '3.0.0',
   info: {
@@ -151,11 +151,6 @@ app.use(cors(corsOptions));
 // Ruta para visualizar la documentación Swagger en la raíz
 app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(especificacionSwagger));
 
-// Ruta para servir el archivo Swagger JSON directamente
-app.get('/swagger.json', (req, res) => {
-  res.json(especificacionSwagger); // Aquí estamos sirviendo el Swagger JSON
-});
-
 // Middleware para parsear los cuerpos de las solicitudes
 app.use(express.json());
 
@@ -254,7 +249,7 @@ app.delete('/libro', (req, res) => {
   );
 });
 
-// Iniciar el servidorx
+// Iniciar el servidor
 app.listen(port, () => {
   console.log(`Servidor en ejecución en http://localhost:${port}`);
 });
