@@ -256,9 +256,7 @@ app.post('/libro', (req, res) => {
     return res.status(400).send('Faltan campos obligatorios');
   }
 
-  if (isNaN(anio)) {
-    return res.status(400).send('El año debe ser un número entero');
-  }
+
 
   connection.query(
     'INSERT INTO libros (titulo, autor, anio) VALUES (?, ?, ?)',
