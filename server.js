@@ -218,7 +218,7 @@ app.get('/tables', (req, res) => {
   });
 });
 
-// Rutas de libros con la documentación Swagger
+// Rutas de libros con la documentación Swaggerr
 app.get('/libro', (req, res) => {
   connection.query('SELECT * FROM libros', (err, results) => {
     if (err) {
