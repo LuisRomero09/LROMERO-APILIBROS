@@ -16,7 +16,7 @@ const readmeContent = fs.readFileSync('./README.md', 'utf-8');
 const app = express();
 const port = process.env.PORT || 8083; // Usa el puerto desde el archivo .env
 
-// Configuración de Swaggers
+// Configuración de Swagger
 const definicionSwagger = {
   openapi: '3.0.0',
   info: {
@@ -256,15 +256,13 @@ app.post('/libro', (req, res) => {
     return res.status(400).send('Faltan campos obligatorios');
   }
 
-
-
   connection.query(
     'INSERT INTO libros (titulo, autor, anio) VALUES (?, ?, ?)',
-    [titulo, autor, parseInt(anio)],
+    [titulo, autor, parseInt(anio)], // Asegúrate de que 'anio' sea un número entero
     (err, result) => {
       if (err) {
-        console.error('Error al agregar el libro: ', err);
-        return res.status(500).send('Error al agregar el libro');
+        console.error('Error al agregar el libro:', err.message); // Mostrar mensaje detallado
+        return res.status(500).send(`Error al agregar el libro: ${err.message}`);
       }
       res.status(201).json({
         id: result.insertId,
@@ -289,8 +287,8 @@ app.put('/libro', (req, res) => {
     [titulo, autor, parseInt(anio), id],
     (err, result) => {
       if (err) {
-        console.error('Error al actualizar el libro: ', err);
-        return res.status(500).send('Error al actualizar el libro');
+        console.error('Error al actualizar el libro:', err.message); // Mostrar mensaje detallado
+        return res.status(500).send(`Error al actualizar el libro: ${err.message}`);
       }
       res.status(200).send('Libro actualizado');
     }
@@ -309,8 +307,8 @@ app.delete('/libro', (req, res) => {
     [id],
     (err, result) => {
       if (err) {
-        console.error('Error al eliminar el libro: ', err);
-        return res.status(500).send('Error al eliminar el libro');
+        console.error('Error al eliminar el libro:', err.message);
+        return res.status(500).send(`Error al eliminar el libro: ${err.message}`);
       }
       res.status(200).send('Libro eliminado');
     }
@@ -319,5 +317,5 @@ app.delete('/libro', (req, res) => {
 
 // Iniciar el servidor
 app.listen(port, () => {
-  console.log(`Servidor corriendo en el puerto ${port}`);
+  console.log(`API escuchando en http://localhost:${port}`);
 });
